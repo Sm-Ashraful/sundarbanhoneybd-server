@@ -2,6 +2,15 @@ import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+import {
+  AvailableSocialLogins,
+  AvailableUserRoles,
+  UserLoginType,
+  UserRolesEnum,
+} from "../constants.js";
+import { Profile } from "./profile.models.js";
+import { Cart } from "./cart.models.js";
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -19,6 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
+      unique: String,
       lowercase: true,
       trim: true,
     },
@@ -27,16 +37,22 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin", "root"],
-      default: "user",
+      enum: AvailableUserRoles,
+      default: UserRolesEnum.USER,
+      required: true,
     },
-    watchHistory: [{ type: Schema.Types.ObjectId, ref: "Video" }],
+    watchHistory: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     password: {
       type: String,
       required: [true, "Please enter your password"],
     },
     refreshToken: {
       type: String,
+    },
+    loginType: {
+      type: String,
+      enum: AvailableSocialLogins,
+      default: UserLoginType.EMAIL_PASSWORD,
     },
   },
   { timestamps: true }
@@ -52,13 +68,45 @@ userSchema.pre("save", async function (next) {
     next(error);
   }
 });
+
+userSchema.post("save", async function (user, next) {
+  // ! Generally, querying data on every user save is not a good idea and not necessary when you are working on a specific application which has concrete models which are tightly coupled
+  // ! However, in this application this user model is being referenced in many loosely coupled models so we need to do some initial setups before proceeding to make sure the data consistency and integrity
+  const ecomProfile = await Profile.findOne({ owner: user._id });
+  const cart = await Cart.findOne({ owner: user._id });
+
+  // Setup necessary ecommerce models for the user
+  if (!ecomProfile) {
+    await Profile.create({
+      owner: user._id,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phone,
+    });
+  }
+  if (!cart) {
+    await Cart.create({
+      owner: user._id,
+      items: [],
+    });
+  }
+
+  // Setup necessary social media models for the user
+  // if (!socialProfile) {
+  //   await SocialProfile.create({
+  //     owner: user._id,
+  //   });
+  // }
+  next();
+});
+
 userSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
   next();
 };
 
 userSchema.methods.generateAccessToken = function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
       name: this.name,
@@ -73,7 +121,7 @@ userSchema.methods.generateAccessToken = function () {
   );
 };
 userSchema.methods.generateRefreshToken = function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
     },

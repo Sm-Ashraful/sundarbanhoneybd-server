@@ -71,7 +71,7 @@ const getAllCategories = asyncHandler(async (req, res) => {
   // console.log("This is called: ", req);
   //get all category
   //return response
-  const categories = await Category.find({}).sort({ createdAt: -1 });
+  const categories = await Category.find({}).sort({ createdAt: 1 });
   const categoryList = createCategories(categories);
   return res
     .status(200)

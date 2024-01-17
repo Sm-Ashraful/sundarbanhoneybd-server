@@ -6,6 +6,8 @@ import {
 } from "../controllers/product.controller.js";
 import { createProductValidator } from "../validators/product.validators.js";
 import { validate } from "../validators/validate.js";
+import { verifyAdmin } from "../middlewares/admin.middleware.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 router.route("/").get(getAllProducts);
@@ -23,6 +25,8 @@ router.route("/create-product").post(
   ]),
   createProductValidator(),
   validate,
+  verifyJWT,
+  verifyAdmin,
   createProduct
 );
 

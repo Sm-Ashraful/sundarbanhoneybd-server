@@ -10,7 +10,7 @@ connectDB()
     app.on("error", (err) => {
       console.log(`Server Crashed due to ${err.message}`);
     });
-    app.listen(process.env.PORT || 8000, () => {
+    app.listen(process.env.PORT || 3085, () => {
       console.log(`Server is running on port ${process.env.PORT}`);
     });
   })

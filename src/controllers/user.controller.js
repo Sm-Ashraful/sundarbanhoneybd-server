@@ -111,6 +111,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   //find the user by id
   //remove refresh token
   //return response
+  console.log("Response: ", req.user);
 
   await User.findByIdAndUpdate(
     req.user._id,
@@ -141,7 +142,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   //check if refresh token is valid
   //generate new access token
   //return response
-
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
 

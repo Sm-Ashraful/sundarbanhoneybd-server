@@ -6,6 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { getMongoosePaginationOptions } from "../utils/helpers.js";
 import slugify from "slugify";
+import { customSlugify } from "../utils/helpers.js";
 
 const getAllProducts = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
@@ -71,11 +72,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
   const product = await Product.create({
     name,
-    slug: slugify(name, {
-      lower: true,
-      strict: true,
-      locale: "bn", // Specify the Bengali locale
-    }),
+    slug: customSlugify(name),
     description,
     stock,
     price,

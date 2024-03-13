@@ -89,10 +89,17 @@ const loginUser = asyncHandler(async (req, res) => {
   const loginUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
-
+  const sameSite = process.env.NODE_ENV === "development" ? "Lax" : "Strict";
+  const secure = !["development", "test"].includes(process.env.NODE_ENV);
+  const domain = null;
   const options = {
     httpOnly: true,
-    secure: true,
+    overwrite: true,
+    sameSite,
+    secure,
+    domain,
+
+    maxAge: 24 * 60 * 60 * 1000,
   };
   return res
     .status(200)
@@ -100,19 +107,17 @@ const loginUser = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(200, "Login successfully", {
-        user: loginUser,
+        // user: loginUser,
         accessToken,
-        refreshToken,
+        // refreshToken,
       })
     );
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  console.log("Hello");
   //find the user by id
   //remove refresh token
-  //return response
-  console.log("Response: ", req.user);
+  //return respons
 
   await User.findByIdAndUpdate(
     req.user._id,
@@ -143,8 +148,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   //check if refresh token is valid
   //generate new access token
   //return response
+  console.log("What is this: ", req.body);
+  console.log("What is this: ", req.cookies);
   const incomingRefreshToken =
-    req.cookies.refreshToken || req.body.refreshToken;
+    req.cookies?.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorize request");
@@ -167,7 +174,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
     const options = {
       httpOnly: true,
-      secure: true,
+      secure: false,
     };
 
     const { accessToken, newRefreshToken } =

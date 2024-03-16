@@ -38,7 +38,8 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Category does not exist");
   }
 
-  // Check if user has uploaded a main image
+  // Check if user has uploaded a main image\
+  console.log("rea.file: ", req.files?.mainImage[0])
   const imagePath = req.files?.mainImage[0]?.path;
   if (!imagePath) {
     throw new ApiError(400, "Main image is required");
@@ -68,7 +69,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
   const subImagesResult = await subImages();
 
-  // const owner = req.user._id;
+  const owner = req.user._id;
 
   const product = await Product.create({
     name,
@@ -76,7 +77,7 @@ const createProduct = asyncHandler(async (req, res) => {
     description,
     stock,
     price,
-    // owner,
+    owner,
     mainImage: {
       url: mainImageRes.url,
     },

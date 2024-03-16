@@ -23,6 +23,9 @@ import cartRouter from "./routes/cart.routes.js";
 import orderRouter from "./routes/order.routes.js";
 import addressRouter from "./routes/address.routes.js";
 import profileRouter from "./routes/profile.routes.js";
+import { logger } from "./middlewares/logger.js";
+
+app.use(logger)
 
 //routes declaration
 app.use("/api/v1/users", userRouter);

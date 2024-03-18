@@ -39,7 +39,7 @@ const createProduct = asyncHandler(async (req, res) => {
   }
 
   // Check if user has uploaded a main image\
-  console.log("rea.file: ", req.files?.mainImage[0])
+  console.log("rea.file: ", req.files?.mainImage[0]);
   const imagePath = req.files?.mainImage[0]?.path;
   if (!imagePath) {
     throw new ApiError(400, "Main image is required");
@@ -181,18 +181,18 @@ const createProduct = asyncHandler(async (req, res) => {
 //     .json(new ApiResponse(200, updatedProduct, "Product updated successfully"));
 // });
 
-// const getProductById = asyncHandler(async (req, res) => {
-//   const { productId } = req.params;
-//   const product = await Product.findById(productId);
+const getProductById = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const product = await Product.findById(productId);
 
-//   if (!product) {
-//     throw new ApiError(404, "Product does not exist");
-//   }
+  if (!product) {
+    throw new ApiError(404, "Product does not exist");
+  }
 
-//   return res
-//     .status(200)
-//     .json(new ApiResponse(200, product, "Product fetched successfully"));
-// });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Product fetched successfully", product));
+});
 
 // const getProductsByCategory = asyncHandler(async (req, res) => {
 //   const { categoryId } = req.params;
@@ -308,7 +308,7 @@ const createProduct = asyncHandler(async (req, res) => {
 export {
   createProduct,
   getAllProducts,
-  //   getProductById,
+  getProductById,
   //   getProductsByCategory,
   //   updateProduct,
   //   removeProductSubImage,

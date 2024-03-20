@@ -78,4 +78,12 @@ const getAllCategories = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "All categories", categoryList));
 });
 
-export { addCategory, getAllCategories };
+const getCategoriesById = asyncHandler(async (req, res) => {
+  const categoryId = req.body;
+  const category = await Category.find({ categoryId });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Category Successfully Fetch", category));
+});
+
+export { addCategory, getAllCategories, getCategoriesById };

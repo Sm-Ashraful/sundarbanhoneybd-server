@@ -2,13 +2,19 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://sundarbanhoneybd.com",
+  "https://www.sundarbanhoneybd.com",
+];
+
+const corsOptions = {
+  origin: allowedOrigins,
+  credentials: true,
+};
+
 const app = express();
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
@@ -25,7 +31,7 @@ import addressRouter from "./routes/address.routes.js";
 import profileRouter from "./routes/profile.routes.js";
 import { logger } from "./middlewares/logger.js";
 
-app.use(logger)
+app.use(logger);
 
 //routes declaration
 app.use("/api/v1/users", userRouter);

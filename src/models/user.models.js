@@ -11,6 +11,10 @@ import {
 import { Profile } from "./profile.models.js";
 import { Cart } from "./cart.models.js";
 
+const RESET_PASSWORD_TOKEN = {
+  expiry: process.env.RESET_PASSWORD_TOKEN_EXPIRY_MINS,
+};
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -54,6 +58,8 @@ const userSchema = new mongoose.Schema(
       enum: AvailableSocialLogins,
       default: UserLoginType.EMAIL_PASSWORD,
     },
+    resetPasswordToken: String,
+    resetPasswordTokenExpiry: Date,
   },
   { timestamps: true }
 );
@@ -80,7 +86,7 @@ userSchema.post("save", async function (user, next) {
     await Profile.create({
       owner: user._id,
       name: user.name,
-      email: user.email,
+      email: user?.email,
       phoneNumber: user.phone,
     });
   }
@@ -129,6 +135,29 @@ userSchema.methods.generateRefreshToken = function () {
       expiresIn: process.env.REFRESH_TOKEN_EXPAIRY,
     }
   );
+};
+
+userSchema.methods.generateResetToken = async function () {
+  const resetTokenValue = crypto.randomBytes(20).toString("base64url");
+  const resetTokenSecret = crypto.randomBytes(10).toString("hex");
+  const user = this;
+
+  // Separator of `+` because generated base64url characters doesn't include this character
+  const resetToken = `${resetTokenValue}+${resetTokenSecret}`;
+
+  // Create a hash
+  const resetTokenHash = crypto
+    .createHmac("sha256", resetTokenSecret)
+    .update(resetTokenValue)
+    .digest("hex");
+
+  user.resetPasswordToken = resetTokenHash;
+  user.resetPasswordTokenExpiry =
+    Date.now() + (RESET_PASSWORD_TOKEN.expiry || 5) * 60 * 1000; // Sets expiration age
+
+  await user.save();
+
+  return resetToken; 
 };
 
 export const User = mongoose.model("User", userSchema);

@@ -1,20 +1,10 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://sundarbanhoneybd.com",
-  "https://www.sundarbanhoneybd.com",
-];
-
-const corsOptions = {
-  origin: allowedOrigins,
-  credentials: true,
-};
+import { corsOptions } from "./config/cors/cors.js";
 
 const app = express();
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
@@ -29,7 +19,12 @@ import cartRouter from "./routes/cart.routes.js";
 import orderRouter from "./routes/order.routes.js";
 import addressRouter from "./routes/address.routes.js";
 import profileRouter from "./routes/profile.routes.js";
+import bannerRouter from "./routes/banner.routes.js";
 import { logger } from "./middlewares/logger.js";
+import {
+  AppErrorHandler,
+  LostErrorHandler,
+} from "./config/exceptionHandlers/handler.js";
 
 app.use(logger);
 
@@ -41,5 +36,17 @@ app.use("/api/v1/carts", cartRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/addresses", addressRouter);
 app.use("/api/v1/profile", profileRouter);
+app.use("/api/v1/banner", bannerRouter);
+
+/* 
+  4. APPLICATION ERROR HANDLING 🚔
+*/
+// Handle unregistered route for all HTTP Methods
+app.all("*", function (req, res, next) {
+  // Forward to next closest middleware
+  next();
+});
+app.use(LostErrorHandler); // 404 error handler middleware
+app.use(AppErrorHandler); // General app error handler
 
 export { app };

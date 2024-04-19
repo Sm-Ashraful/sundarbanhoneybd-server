@@ -14,6 +14,6 @@ const corsOptions = {
     }
   },
   credentials: true,
-  exposedHeaders: ["WWW-Authenticate"],
+  // exposedHeaders: ["WWW-Authenticate"],
 };
 export { corsOptions };

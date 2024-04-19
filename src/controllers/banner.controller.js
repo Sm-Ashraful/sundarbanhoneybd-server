@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { Banner } from "../models/banner.models.js";
 import { Product } from "../models/product.models.js";
 import { Category } from "../models/category.models.js";
@@ -57,16 +56,16 @@ const createBanner = asyncHandler(async (req, res) => {
 });
 
 // Get all banners
-// exports.getBanners = async (req, res) => {
-//   try {
-//     const banners = await Banner.find();
-//     // Consider populating associated Product/Category if using references
-//     res.json(banners);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
+const getAllBanners = asyncHandler(async (req, res) => {
+  // console.log("Rea.status: ", req);
+  try {
+    const banners = await Banner.find({});
+    // Consider populating associated Product/Category if using references
+    return res.status(200).json(new ApiResponse(200, "Successful", banners));
+  } catch (err) {
+    throw new ApiError(500, "Server Error", `{${err.message}}`);
+  }
+});
 // Get a single banner
 // exports.getBanner = async (req, res) => {
 //   try {
@@ -83,4 +82,4 @@ const createBanner = asyncHandler(async (req, res) => {
 
 // ... Other controller actions: updateBanner, deleteBanner, etc.
 
-export { createBanner };
+export { createBanner, getAllBanners };

@@ -30,8 +30,12 @@ const productSchema = new Schema(
       type: Schema.Types.ObjectId,
     },
     price: {
-      default: 0,
       type: Number,
+      default: 0,
+    },
+    sellingPrice: {
+      type: Number,
+      default: 0,
     },
     stock: {
       default: 0,
@@ -45,8 +49,20 @@ const productSchema = new Schema(
       ],
       default: [],
     },
+    productType: {
+      type: String,
+      enum: ["regular", "special", "offer"],
+    },
+    discountPercent: {
+      type: Number,
+      default: 0,
+    },
+    productRating: {
+      type: Number,
+      default: 0,
+    },
     details: {
-      type: mongoose.Schema.Types.Mixed,
+      type: String,
     },
   },
   { timestamps: true }

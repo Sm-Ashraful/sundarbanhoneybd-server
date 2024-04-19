@@ -51,6 +51,12 @@ const bannerSchema = new mongoose.Schema(
         return this.linkType === "category";
       },
     },
+    status: {
+      type: String,
+      enum: ["pending", "complete"],
+      default: "pending",
+      required: true,
+    },
   },
   { timestamps: true }
 );

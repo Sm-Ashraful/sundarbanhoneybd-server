@@ -5,7 +5,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { getMongoosePaginationOptions } from "../utils/helpers.js";
-import slugify from "slugify";
 import { customSlugify } from "../utils/helpers.js";
 
 const getAllProducts = asyncHandler(async (req, res) => {
@@ -29,8 +28,18 @@ const getAllProducts = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Products fetched successfully", products));
 });
 
+//save product into database
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, category, price, stock, details } = req.body;
+  const {
+    name,
+    description,
+    category,
+    price,
+    stock,
+    details,
+    productType,
+    discountPercent,
+  } = req.body;
 
   const categoryToBeAdded = await Category.findById(category);
 
@@ -39,7 +48,6 @@ const createProduct = asyncHandler(async (req, res) => {
   }
 
   // Check if user has uploaded a main image\
-  console.log("rea.file: ", req.files?.mainImage[0]);
   const imagePath = req.files?.mainImage[0]?.path;
   if (!imagePath) {
     throw new ApiError(400, "Main image is required");
@@ -71,12 +79,22 @@ const createProduct = asyncHandler(async (req, res) => {
 
   const owner = req.user._id;
 
+  let sellingPrice = 0;
+  if (discountPercent) {
+    sellingPrice = price - (price * discountPercent) / 100;
+  } else {
+    sellingPrice = price;
+  }
+
   const product = await Product.create({
     name,
     slug: customSlugify(name),
     description,
     stock,
     price,
+    sellingPrice,
+    productType,
+    discountPercent,
     owner,
     mainImage: {
       url: mainImageRes.url,

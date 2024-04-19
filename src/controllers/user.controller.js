@@ -67,6 +67,8 @@ const loginUser = asyncHandler(async (req, res) => {
   //access and refresh token
   //send cookie
   //return response
+  console.log("Req.body: ", req.body);
+  console.log("rea.header: ", req.header);
 
   const { phone, email, password } = req.body;
   if (!phone && !email) {
@@ -99,11 +101,12 @@ const loginUser = asyncHandler(async (req, res) => {
   };
   return res
     .status(200)
+    .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(200, "Login successfully", {
         accessToken,
-        // user: loginUser,
+        user: loginUser,
       })
     );
 });
@@ -112,7 +115,6 @@ const logoutUser = asyncHandler(async (req, res) => {
   //find the user by id
   //remove refresh token
   //return respons
-
   await User.findByIdAndUpdate(
     req.user._id,
     {

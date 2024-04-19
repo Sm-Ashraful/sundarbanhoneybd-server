@@ -157,7 +157,7 @@ userSchema.methods.generateResetToken = async function () {
 
   await user.save();
 
-  return resetToken; 
+  return resetToken;
 };
 
 export const User = mongoose.model("User", userSchema);

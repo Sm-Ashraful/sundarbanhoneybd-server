@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-// import { corsOptions } from "./config/cors/cors.js";
-const corsOptions = {
-  origin: "https://sundarbanhoneybd.com", //(https://your-client-app.com)
-  optionsSuccessStatus: 200,
-  credentials: true,
-};
+import { corsOptions } from "./config/cors/cors.js";
+// const corsOptions = {
+//   origin: "https://sundarbanhoneybd.com", //(https://your-client-app.com)
+//   optionsSuccessStatus: 200,
+//   credentials: true,
+// };
 
 const app = express();
 app.use(cors(corsOptions));

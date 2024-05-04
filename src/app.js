@@ -3,7 +3,11 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 // import { corsOptions } from "./config/cors/cors.js";
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://sundarbanhoneybd.com"],
+  origin: [
+    "http://localhost:3000",
+    "https://sundarbanhoneybd.com",
+    "http://sundarbanhoneybd.com",
+  ],
   optionsSuccessStatus: 200,
   credentials: true,
 };
@@ -49,8 +53,6 @@ app.use("/api/v1/banner", bannerRouter);
 */
 // Handle unregistered route for all HTTP Methods
 app.all("*", function (req, res, next) {
-  // Forward to next closest middleware
-  console.log("CD: ", req.header);
   next();
 });
 app.use(LostErrorHandler); // 404 error handler middleware

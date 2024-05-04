@@ -1,4 +1,5 @@
 import { Category } from "../models/category.models.js";
+import { Product } from "../models/product.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -78,12 +79,23 @@ const getAllCategories = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "All categories", categoryList));
 });
 
-const getCategoriesById = asyncHandler(async (req, res) => {
-  const categoryId = req.body;
-  const category = await Category.find({ categoryId });
+const getProductByCategoryId = asyncHandler(async (req, res) => {
+  const categoryId = req.query.categoryId;
+  const products = await Product.find({ category: categoryId });
+
   return res
     .status(200)
-    .json(new ApiResponse(200, "Category Successfully Fetch", category));
+    .json(new ApiResponse(200, "Products Successfully Fetched", products));
 });
 
-export { addCategory, getAllCategories, getCategoriesById };
+// const getCategoryByName = asyncHandler(async (req, res) => {
+//   console.log("getCategory: ", req.query);
+//   const categoryName = req.query.categoryName;
+//   const category = await Product.find({ name: categoryName });
+//   console.log("Category: ", category);
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, "Category Successfully Fetch", category));
+// });
+
+export { addCategory, getAllCategories, getProductByCategoryId };

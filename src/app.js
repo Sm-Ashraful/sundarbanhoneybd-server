@@ -1,14 +1,15 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { corsOptions } from "./config/cors/cors.js";
-// const corsOptions = {
-//   origin: "https://sundarbanhoneybd.com", //(https://your-client-app.com)
-//   optionsSuccessStatus: 200,
-//   credentials: true,
-// };
+// import { corsOptions } from "./config/cors/cors.js";
+const corsOptions = {
+  origin: ["http://localhost:3000", "http://sundarbanhoneybd.com"],
+  optionsSuccessStatus: 200,
+  credentials: true,
+};
 
 const app = express();
+
 app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "100kb" }));
@@ -49,6 +50,7 @@ app.use("/api/v1/banner", bannerRouter);
 // Handle unregistered route for all HTTP Methods
 app.all("*", function (req, res, next) {
   // Forward to next closest middleware
+  console.log("CD: ", req.header);
   next();
 });
 app.use(LostErrorHandler); // 404 error handler middleware

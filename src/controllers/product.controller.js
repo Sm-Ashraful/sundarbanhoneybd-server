@@ -8,7 +8,7 @@ import { getMongoosePaginationOptions } from "../utils/helpers.js";
 import { customSlugify } from "../utils/helpers.js";
 
 const getAllProducts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 8 } = req.query;
   const productAggregate = Product.aggregate([{ $match: {} }]);
 
   const products = await Product.aggregatePaginate(

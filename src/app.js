@@ -4,9 +4,10 @@ import cookieParser from "cookie-parser";
 // import { corsOptions } from "./config/cors/cors.js";
 const corsOptions = {
   origin: [
-    "http://localhost:3000",
     "https://sundarbanhoneybd.com",
+    "http://localhost:3000",
     "http://sundarbanhoneybd.com",
+    "https://www.sundarbanhoneybd.com",
   ],
   optionsSuccessStatus: 200,
   credentials: true,

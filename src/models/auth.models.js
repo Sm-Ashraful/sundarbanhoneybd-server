@@ -1,13 +1,7 @@
-import mongoose, { Schema } from "mongoose";
-import bcrypt from "bcrypt";
+import mongoose, { Schema, version } from "mongoose";
 import jwt from "jsonwebtoken";
 
-import {
-  AvailableSocialLogins,
-  AvailableUserRoles,
-  UserLoginType,
-  UserRolesEnum,
-} from "../constants.js";
+import { AvailableUserRoles, UserRolesEnum } from "../constants.js";
 import { Profile } from "./profile.models.js";
 import { Cart } from "./cart.models.js";
 
@@ -15,10 +9,8 @@ const clientSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     phone: {
       type: String,
@@ -26,9 +18,9 @@ const clientSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-
-    avatar: {
-      type: String,
+    tokenVersion: {
+      type: Number,
+      default: 0,
     },
     role: {
       type: String,
@@ -37,18 +29,6 @@ const clientSchema = new mongoose.Schema(
       required: true,
     },
     watchHistory: [{ type: Schema.Types.ObjectId, ref: "Product" }],
-    otp: {
-      type: Boolean,
-      default: false,
-    },
-    refreshToken: {
-      type: String,
-    },
-    loginType: {
-      type: String,
-      enum: AvailableSocialLogins,
-      default: UserLoginType.CLIENT,
-    },
   },
   { timestamps: true }
 );

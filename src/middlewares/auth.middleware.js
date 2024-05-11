@@ -2,10 +2,9 @@ import { User } from "../models/user.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
+import { verifyAccessToken } from "../utils/token.utils.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
-  // console.log("req.header verify: ", req.header("Authorization"));
-  // console.log("Req.cookies: ,", req.cookies);
   try {
     const token =
       req.cookies?.accessToken ||
@@ -38,3 +37,18 @@ export const verifyPermission = (roles = []) => {
     next();
   });
 };
+
+export const authMiddleware = asyncHandler(async (req, res, next) => {
+  console.log("req.cookies", req.cookies);
+  const token = verifyAccessToken(
+    req.cookies["access_token"] || req.headers.cookie["access_token"]
+  );
+  console.log("TOken: ", token);
+  if (!token) {
+    throw new ApiError(401, "Not Signed in");
+  }
+
+  res.locals.access_token = token;
+
+  next();
+});

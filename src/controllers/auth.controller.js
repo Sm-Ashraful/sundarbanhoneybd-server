@@ -6,21 +6,13 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import _ from "lodash";
-import { clearTokens, verifyRefreshToken } from "../utils/token.utils.js";
-
-const generateAccessTokenAndRefreshToken = async (userId) => {
-  try {
-    const client = await Client.findById(userId);
-    // console.log("User before new accrcc: ", user);
-    const access_token = client.generateAccessToken();
-    const refresh_token = client.generateRefreshToken();
-
-    // console.log("User after new rcc: ", user);
-    return { access_token, refresh_token };
-  } catch (error) {
-    throw new ApiError(500, "Something went wrong");
-  }
-};
+import {
+  buildTokens,
+  clearTokens,
+  refreshTokens,
+  setTokens,
+  verifyRefreshToken,
+} from "../utils/token.utils.js";
 
 const loginClient = asyncHandler(async (req, res) => {
   //get data ->req.body
@@ -59,44 +51,38 @@ const verifyOtp = asyncHandler(async (req, res) => {
   const rightOtpFind = otpHolder[otpHolder.length - 1];
   const validUser = await bcrypt.compare(otp, rightOtpFind.otp);
 
-  let access_token;
-  let refresh_token;
-
   if (rightOtpFind.phone === phone && validUser) {
     if (client) {
       await Client.findOneAndUpdate(
         { id: client._id },
         { $inc: { tokenVersion: 1 } }
       );
-      access_token = client.generateAccessToken();
-      refresh_token = client.generateRefreshToken();
-      await client.save({ validateBeforeSave: false });
-    } else {
-      client = new Client(_.pick(req.body, ["phone"]));
-      access_token = client.generateAccessToken();
-      refresh_token = client.generateRefreshToken();
-      await client.save({ validateBeforeSave: false });
-    }
-    const otpDelete = await OTP.deleteMany({
-      phone: rightOtpFind.number,
-    });
-
-    const options = {
-      httpOnly: true,
-      secure: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-    };
-    return res
-      .status(200)
-
-      .cookie("refresh_token", refresh_token, options)
-      .cookie("access_token", access_token, options)
-      .json(
-        new ApiResponse(200, "Refresh token successfully", {
+      const { access_token, refresh_token } = buildTokens(client);
+      const otpDelete = await OTP.deleteMany({
+        phone: rightOtpFind.number,
+      });
+      setTokens(res, access_token, refresh_token);
+      return res.status(200).json(
+        new ApiResponse(200, "Login Successfully", {
+          access_token: access_token,
           user: client,
         })
       );
+    } else {
+      client = new Client(_.pick(req.body, ["phone"]));
+      const { access_token, refresh_token } = buildTokens(client);
+      await client.save({ validateBeforeSave: false });
+      const otpDelete = await OTP.deleteMany({
+        phone: rightOtpFind.number,
+      });
+      setTokens(res, access_token, refresh_token);
+      return res.status(200).json(
+        new ApiResponse(200, "Login Successfully", {
+          access_token: access_token,
+          user: client,
+        })
+      );
+    }
   } else {
     throw new ApiError(400, "Your otp is wrong");
   }
@@ -117,35 +103,28 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   try {
     //decode incoming request token for find user
     const current = verifyRefreshToken(incomingRefreshToken);
-    console.log("current", current);
     const client = await Client.findById(current?._id);
-    console.log("client", client);
-    // console.log("User: ", user);
+
     if (!client) {
-      throw new ApiError(401, "Invalid Refresh Token");
+      throw new ApiError(401, "Client not found!");
     }
 
     if (incomingRefreshToken !== req.cookies["refresh_token"]) {
       throw new ApiError(401, "Refresh token is expired");
     }
-    const options = {
-      httpOnly: true,
-      secure: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-    };
 
-    const { access_token, refresh_token } =
-      await generateAccessTokenAndRefreshToken(client._id);
+    const { access_token, refresh_token } = refreshTokens(
+      current,
+      client.tokenVersion
+    );
 
-    console.log("New access token:", access_token);
-    console.log("New access newRefreshToken:", refresh_token);
-
-    return res
-      .status(200)
-      .cookie("access_token", access_token, options)
-      .cookie("refresh_token", refresh_token, options)
-      .json(new ApiResponse(200, "Refresh token successfully", {}));
+    setTokens(res, access_token, refresh_token);
+    return res.status(200).json(
+      new ApiResponse(200, "Generate new access toke successfully", {
+        user: client,
+        access_token: access_token,
+      })
+    );
   } catch (error) {
     console.log("Icoming error: ", error);
     clearTokens(res);

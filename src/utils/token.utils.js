@@ -67,8 +67,6 @@ export function setTokens(res, access, refresh) {
 }
 
 export function refreshTokens(current, tokenVersion) {
-  if (tokenVersion !== current.version) throw "Token revoked";
-
   const accessPayload = { _id: current._id, name: current.name };
 
   const refreshPayload = {
@@ -79,7 +77,7 @@ export function refreshTokens(current, tokenVersion) {
 
   const access_token = signAccessToken(accessPayload);
   const refresh_token = signRefreshToken(refreshPayload);
-
+  console.log("current accss refresh: ", access_token, refresh_token);
   return { access_token, refresh_token };
 }
 

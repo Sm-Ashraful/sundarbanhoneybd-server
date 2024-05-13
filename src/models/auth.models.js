@@ -25,7 +25,7 @@ const clientSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: AvailableUserRoles,
-      default: UserRolesEnum.CLIENT,
+      default: UserRolesEnum.USER,
       required: true,
     },
     watchHistory: [{ type: Schema.Types.ObjectId, ref: "Product" }],

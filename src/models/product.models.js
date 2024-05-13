@@ -64,6 +64,10 @@ const productSchema = new Schema(
     details: {
       type: String,
     },
+    shipping: {
+      type: String,
+      enum: ["FIXED", "NO", "EXP"],
+    },
   },
   { timestamps: true }
 );

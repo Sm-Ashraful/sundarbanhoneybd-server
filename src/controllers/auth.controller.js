@@ -138,7 +138,7 @@ const logoutClient = asyncHandler(async (req, res, next) => {
 });
 
 const getCurrentClient = asyncHandler(async (req, res) => {
-  const user = await Client.findById(res.locals.access_token._id);
+  const user = await Client.findById(req.user._id);
   return res
     .status(200)
     .json(new ApiResponse(200, "User fetched successfully", user));

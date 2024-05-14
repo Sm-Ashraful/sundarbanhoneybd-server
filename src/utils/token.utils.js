@@ -8,7 +8,9 @@ const defaultCookieOptions = {
 };
 
 const TokenExpiration = {
+
   Access: 3 * 24 * 60 * 60, // 5 minutes in seconds
+
   Refresh: 7 * 24 * 60 * 60, // 7 days in seconds
   RefreshIfLessThan: 4 * 24 * 60 * 60, // 4 days in seconds
 };
@@ -67,8 +69,6 @@ export function setTokens(res, access, refresh) {
 }
 
 export function refreshTokens(current, tokenVersion) {
-  if (tokenVersion !== current.version) throw "Token revoked";
-
   const accessPayload = { _id: current._id, name: current.name };
 
   const refreshPayload = {
@@ -79,7 +79,7 @@ export function refreshTokens(current, tokenVersion) {
 
   const access_token = signAccessToken(accessPayload);
   const refresh_token = signRefreshToken(refreshPayload);
-
+  console.log("current accss refresh: ", access_token, refresh_token);
   return { access_token, refresh_token };
 }
 

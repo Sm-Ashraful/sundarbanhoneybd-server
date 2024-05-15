@@ -82,14 +82,20 @@ const getUserCart = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Cart fetched successfully", cart));
 });
 
+//add or update cart item
 const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { quantity = 1 } = req.body;
-
+  let cart;
   // fetch user cart
-  const cart = await Cart.findOne({
-    owner: req.user._id,
-  });
+  if (req.user) {
+    cart =
+      (await Cart.findOne({ owner: req.user._id })) ||
+      new Cart({ owner: req.user._id });
+  } else {
+    // If user is not logged in, use cart from session or create a new one
+    cart = req.session.cart || { items: [] };
+  }
 
   // See if product that user is adding exist in the db
   const product = await Product.findById(productId);
@@ -113,18 +119,13 @@ const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   }
 
   // See if the product that user is adding already exists in the cart
-  const addedProduct = cart.items?.find(
+  const existsProduct = cart.items?.find(
     (item) => item.productId.toString() === productId
   );
 
-  if (addedProduct) {
-    // If product already exist assign a new quantity to it
-    // ! We are not adding or subtracting quantity to keep it dynamic. Frontend will send us updated quantity here
-    addedProduct.quantity = quantity;
-    // if user updates the cart remove the coupon associated with the cart to avoid misuse
-    // Do this only if quantity changes because if user adds a new project the cart total will increase anyways
+  if (existsProduct) {
+    existsProduct.quantity = existsProduct.quantity + quantity;
   } else {
-    // if its a new product being added in the cart push it to the cart items
     cart.items.push({
       productId,
       quantity,
@@ -132,13 +133,17 @@ const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   }
 
   // Finally save the cart
-  await cart.save({ validateBeforeSave: true });
+  if (req.user) {
+    await cart.save({ validateBeforeSave: true });
+  } else {
+    req.session.cart = cart;
+  }
 
-  const newCart = await getCart(req.user._id); // structure the user cart
+  const newCart = req.user ? await getCart(req.user._id) : cart;
 
   return res
     .status(200)
-    .json(new ApiResponse(200, newCart, "Item added successfully"));
+    .json(new ApiResponse(200, "Item added successfully", newCart));
 });
 
 const removeItemFromCart = asyncHandler(async (req, res) => {

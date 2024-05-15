@@ -24,6 +24,7 @@ router
     mongoIdPathVariableValidator("productId"),
     addItemOrUpdateItemQuantityValidator(),
     validate,
+
     addItemOrUpdateItemQuantity
   )
   .delete(

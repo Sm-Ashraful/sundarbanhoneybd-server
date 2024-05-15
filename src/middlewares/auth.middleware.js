@@ -8,9 +8,11 @@ import { Client } from "../models/auth.models.js";
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     const token =
-      req.cookies?.accessToken ||
+      req.cookies?.access_token ||
       req.header("Authorization")?.replace("Bearer ", "");
     console.log("token of daon:", token);
+
+    console.log("Verify jwt: ", token);
 
     if (!token) {
       throw new ApiError(401, "Unauthorized request");

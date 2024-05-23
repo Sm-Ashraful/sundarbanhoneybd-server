@@ -86,15 +86,13 @@ const getUserCart = asyncHandler(async (req, res) => {
 const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { quantity = 1 } = req.body;
+
   let cart;
   // fetch user cart
-  if (req.user) {
-    cart =
-      (await Cart.findOne({ owner: req.user._id })) ||
-      new Cart({ owner: req.user._id });
-  } else {
-    // If user is not logged in, use cart from session or create a new one
-    cart = req.session.cart || { items: [] };
+  cart = await Cart.findOne({ owner: req.user._id });
+  console.log("Cart count: ", cart);
+  if (!cart) {
+    cart = new Cart({ owner: req.user._id });
   }
 
   // See if product that user is adding exist in the db
@@ -124,7 +122,7 @@ const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   );
 
   if (existsProduct) {
-    existsProduct.quantity = existsProduct.quantity + quantity;
+    existsProduct.quantity = quantity;
   } else {
     cart.items.push({
       productId,
@@ -133,13 +131,10 @@ const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   }
 
   // Finally save the cart
-  if (req.user) {
-    await cart.save({ validateBeforeSave: true });
-  } else {
-    req.session.cart = cart;
-  }
 
-  const newCart = req.user ? await getCart(req.user._id) : cart;
+  await cart.save({ validateBeforeSave: true });
+
+  const newCart = await getCart(req.user._id);
 
   return res
     .status(200)

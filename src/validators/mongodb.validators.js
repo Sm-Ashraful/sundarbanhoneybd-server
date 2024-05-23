@@ -6,6 +6,7 @@ import { body, param } from "express-validator";
  * @description A common validator responsible to validate mongodb ids passed in the url's path variable
  */
 export const mongoIdPathVariableValidator = (idName) => {
+  // console.log("Id name: ", idName);
   return [
     param(idName).notEmpty().isMongoId().withMessage(`Invalid ${idName}`),
   ];

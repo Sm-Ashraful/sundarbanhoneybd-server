@@ -4,9 +4,9 @@ import cookieParser from "cookie-parser";
 // import { corsOptions } from "./config/cors/cors.js";
 
 const app = express();
-//
+//{ credentials: true, origin: process.env.CLIENT_URL }
 
-app.use(cors({ credentials: true, origin: process.env.CLIENT_URL }));
+app.use(cors("*"));
 
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));

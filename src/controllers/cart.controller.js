@@ -1,88 +1,8 @@
 import { Cart } from "../models/cart.models.js";
-import { Product } from "../models/product.models.js";
 import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { Product } from "../models/product.models.js";
 
-/**
- *
- * @param {string} userId
- * @description A utility function, which querys the {@link Cart} model and returns the cart in `Promise<{_id: string, items: {_id: string, product: Product, quantity: number}[], cartTotal: number}>` format
- *  @returns {Promise<{_id: string, items: {_id: string, product: Product, quantity: number}[], cartTotal: number, discountedTotal: number, coupon: Coupon}>}
- */
-export const getCart = async (userId) => {
-  const cartAggregation = await Cart.aggregate([
-    {
-      $match: {
-        owner: userId,
-      },
-    },
-    {
-      $unwind: "$items",
-    },
-    {
-      $lookup: {
-        from: "products",
-        localField: "items.productId",
-        foreignField: "_id",
-        as: "product",
-      },
-    },
-    {
-      $project: {
-        // _id: 0,
-        product: { $first: "$product" },
-        quantity: "$items.quantity", // also project coupon field
-      },
-    },
-    {
-      $group: {
-        _id: "$_id",
-        items: {
-          $push: "$$ROOT",
-        },
-        // get first value of coupon after grouping
-        cartTotal: {
-          $sum: {
-            $multiply: ["$product.price", "$quantity"], // calculate the cart total based on product price * total quantity
-          },
-        },
-      },
-    },
-
-    {
-      $addFields: {
-        discountedTotal: {
-          // Final total is the total we get once user applies any coupon
-          // final total is total cart value - coupon's discount value
-          $ifNull: [
-            "$cartTotal", // if there is no coupon applied we will set cart total as out final total
-            ,
-          ],
-        },
-      },
-    },
-  ]);
-
-  return (
-    cartAggregation[0] ?? {
-      _id: null,
-      items: [],
-      cartTotal: 0,
-      discountedTotal: 0,
-    }
-  );
-};
-
-const getUserCart = asyncHandler(async (req, res) => {
-  let cart = await getCart(req.user._id);
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Cart fetched successfully", cart));
-});
-
-//add or update cart item
 const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { quantity = 1 } = req.body;

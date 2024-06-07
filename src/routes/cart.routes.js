@@ -9,6 +9,7 @@ import {
 import { validate } from "../validators/validate.js";
 import { addItemOrUpdateItemQuantityValidator } from "../validators/cart.validator.js";
 import { mongoIdPathVariableValidator } from "../validators/mongodb.validators.js";
+import { ensureUser } from "../middlewares/anonimous.middleware.js";
 
 const router = Router();
 
@@ -24,7 +25,6 @@ router
     mongoIdPathVariableValidator("productId"),
     addItemOrUpdateItemQuantityValidator(),
     validate,
-
     addItemOrUpdateItemQuantity
   )
   .delete(

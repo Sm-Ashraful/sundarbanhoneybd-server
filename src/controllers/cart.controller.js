@@ -86,23 +86,19 @@ const getUserCart = asyncHandler(async (req, res) => {
 const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { quantity = 1 } = req.body;
+  const user = req.user;
 
-  let cart;
-  // fetch user cart
-  cart = await Cart.findOne({ owner: req.user._id });
-  console.log("Cart count: ", cart);
-  if (!cart) {
-    cart = new Cart({ owner: req.user._id });
+  if (!user) {
+    throw new ApiError(400, "User is unauthorize");
   }
 
-  // See if product that user is adding exist in the db
-  const product = await Product.findById(productId);
-
-  if (!product) {
-    throw new ApiError(404, "Product does not exist");
+  let userCart = await Cart.findOne({ owner: user._id });
+  if (!userCart) {
+    userCart = new Cart({ owner: user._id });
   }
 
-  // If product is there check if the quantity that user is adding is less than or equal to the product's stock
+  const product = await Product.findById(productId); //shoud be optomize
+  if (!product) throw new ApiError(500, "Product does not exists");
   if (quantity > product.stock) {
     // if quantity is greater throw an error
     throw new ApiError(
@@ -115,30 +111,21 @@ const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
         : "Product is out of stock"
     );
   }
-
-  // See if the product that user is adding already exists in the cart
-  const existsProduct = cart.items?.find(
-    (item) => item.productId.toString() === productId
-  );
-
-  if (existsProduct) {
-    existsProduct.quantity = quantity;
+  const productThatAlreadyInCart = await userCart.items?.find((item) => {
+    return item.productId.toString() === productId;
+  });
+  if (productThatAlreadyInCart) {
+    productThatAlreadyInCart.quantity = quantity;
   } else {
-    cart.items.push({
+    userCart.owner = user._id;
+    userCart.items.push({
       productId,
       quantity,
     });
   }
-
-  // Finally save the cart
-
-  await cart.save({ validateBeforeSave: true });
-
+  await userCart.save({ validateBeforeSave: true });
   const newCart = await getCart(req.user._id);
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Item added successfully", newCart));
+  return res.status(200).json(new ApiResponse(200, "Item added successfully"));
 });
 
 const removeItemFromCart = asyncHandler(async (req, res) => {
@@ -187,6 +174,7 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
 });
 
 const clearCart = asyncHandler(async (req, res) => {
+  console.log("Req.user: ", req.user);
   await Cart.findOneAndUpdate(
     {
       owner: req.user._id,
@@ -202,7 +190,7 @@ const clearCart = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Cart has been cleared", carts));
+    .json(new ApiResponse(200, "Cart has been cleared", cart));
 });
 
 export {

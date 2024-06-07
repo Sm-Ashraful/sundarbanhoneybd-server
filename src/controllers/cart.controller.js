@@ -113,9 +113,4 @@ const clearCart = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Cart has been cleared", cart));
 });
 
-export {
-  getUserCart,
-  addItemOrUpdateItemQuantity,
-  removeItemFromCart,
-  clearCart,
-};
+export { addItemOrUpdateItemQuantity, removeItemFromCart, clearCart };

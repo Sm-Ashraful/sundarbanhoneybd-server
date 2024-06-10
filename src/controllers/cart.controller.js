@@ -143,9 +143,6 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
       owner: req.user._id,
     },
     {
-      // Pull the product inside the cart items
-      // ! We are not handling decrement logic here that's we are doing in addItemOrUpdateItemQuantity method
-      // ! this controller is responsible to remove the cart item entirely
       $pull: {
         items: {
           productId: productId,
@@ -156,17 +153,7 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
   );
 
   await updatedCart.save({ validateBeforeSave: false });
-  //     // fetch the latest updated cart
   const cart = await getCart(req.user._id);
-
-  // check if the cart's new total is greater than the minimum cart total requirement of the coupon
-  //   if (cart.coupon && cart.cartTotal < cart.coupon.minimumCartValue) {
-  //     // if it is less than minimum cart value remove the coupon code which is applied
-  //     updatedCart.coupon = null;
-  //     await updatedCart.save({ validateBeforeSave: false });
-  //     // fetch the latest updated cart
-  //     cart = await getCart(req.user._id);
-  //   }
 
   return res
     .status(200)

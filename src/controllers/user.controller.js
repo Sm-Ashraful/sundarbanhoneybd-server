@@ -8,14 +8,12 @@ import { UserRolesEnum } from "../constants.js";
 const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
-    // console.log("User before new accrcc: ", user);
+
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
     user.refreshToken = refreshToken;
-    // console.log("User after new rcc: ", user);
     await user.save({ validateBeforeSave: false });
-
     return { accessToken, refreshToken };
   } catch (error) {
     throw new ApiError(500, "Something went wrong");
@@ -58,12 +56,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   //get data ->req.body
-  const { phone, email, password } = req.body;
+  const { phone, password } = req.body;
   if (!phone && !email) {
     throw new ApiError(400, "Phone or email is required");
   }
   //find that user
-  const user = await User.findOne({ $or: [{ phone }, { email }] });
+  const user = await User.findOne({ phone });
   //not found
   if (!user) {
     throw new ApiError(400, "User not found");

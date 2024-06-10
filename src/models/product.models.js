@@ -37,6 +37,10 @@ const productSchema = new Schema(
       type: Number,
       default: 0,
     },
+    weight: {
+      default: 0,
+      type: Number,
+    },
     stock: {
       default: 0,
       type: Number,

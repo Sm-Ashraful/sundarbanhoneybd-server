@@ -8,8 +8,6 @@ import bcrypt from "bcrypt";
 
 const loginAdmin = asyncHandler(async (req, res) => {
   const { phone, password } = req.body;
-  console.log("Req.body: ", req.body);
-  console.log("Req: ", req.headers);
 
   const admin = await User.findOne({ phone, role: "ADMIN" });
 

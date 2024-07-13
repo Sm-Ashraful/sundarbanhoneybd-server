@@ -18,6 +18,12 @@ const productSchema = new Schema(
         url: String,
       },
     },
+    bannerImage: {
+      type: {
+        url: String,
+      },
+    },
+
     name: {
       required: true,
       type: String,
@@ -64,6 +70,17 @@ const productSchema = new Schema(
     productRating: {
       type: Number,
       default: 0,
+    },
+    offerTimePeriod: {
+      type: Number,
+    },
+    offerTitle: {
+      type: String,
+    },
+    priority: {
+      type: String,
+      enum: ["high", "medium", "low"],
+      default: "medium",
     },
     details: {
       type: String,

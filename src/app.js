@@ -26,6 +26,9 @@ import orderRouter from "./routes/order.routes.js";
 import addressRouter from "./routes/address.routes.js";
 import profileRouter from "./routes/profile.routes.js";
 import bannerRouter from "./routes/banner.routes.js";
+import checkoutRouter from "./routes/checkout.routes.js";
+import discountRouter from "./routes/discount.routes.js";
+import shippingCityRouter from "./routes/shippingCost.route.js";
 import { logger } from "./middlewares/logger.js";
 import {
   AppErrorHandler,
@@ -36,14 +39,17 @@ app.use(logger);
 
 //routes declaration
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/users", userRouter);
+app.use("/api/v1/admin", userRouter);
 app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/carts", cartRouter);
+app.use("/api/v1/checkout", checkoutRouter);
+app.use("/app/v1/discount", discountRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/addresses", addressRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/banner", bannerRouter);
+app.use("/api/v1/shipping-city", shippingCityRouter);
 
 /* 
   4. APPLICATION ERROR HANDLING 🚔

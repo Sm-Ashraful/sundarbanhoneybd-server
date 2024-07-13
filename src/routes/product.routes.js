@@ -3,7 +3,10 @@ import { upload } from "../middlewares/multer.middleware.js";
 import {
   createProduct,
   getAllProducts,
+  getAllProductWithoutPagination,
   getProductById,
+  getProductsByCategory,
+  getSpecialProducts,
 } from "../controllers/product.controller.js";
 import { createProductValidator } from "../validators/product.validators.js";
 import { validate } from "../validators/validate.js";
@@ -13,6 +16,9 @@ import { mongoIdPathVariableValidator } from "../validators/mongodb.validators.j
 
 const router = Router();
 router.route("/").get(getAllProducts);
+router.route("/all").get(getAllProductWithoutPagination);
+router.route("/special").get(getSpecialProducts);
+router.route("/:categoryId").get(getProductsByCategory);
 router
   .route("/:productId")
   .get(mongoIdPathVariableValidator("productId"), validate, getProductById);
@@ -28,6 +34,7 @@ router.route("/create-product").post(
       maxCount: 4, // maximum number of subImages is 4
     },
   ]),
+
   createProductValidator(),
   validate,
   verifyJWT,

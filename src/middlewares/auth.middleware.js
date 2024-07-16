@@ -8,17 +8,19 @@ import { Client } from "../models/auth.models.js";
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     const token =
-      req.cookies?.accessToken ||
+      req.cookies?.access_token ||
       req.header("Authorization")?.replace("Bearer ", "");
-    console.log("token of daon:", token);
-
+    console.log("token: ", token);
     if (!token) {
       throw new ApiError(401, "Unauthorized request");
     }
 
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    const user = await Client.findById(decodedToken?._id).select("-password");
+    let user = await Client.findById(decodedToken?._id).select("-password");
+    if (!user) {
+      user = await User.findById(decodedToken?._id).select("-password");
+    }
     if (!user) {
       throw new ApiError(401, "Invalid token");
     }

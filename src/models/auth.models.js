@@ -14,7 +14,6 @@ const clientSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -27,6 +26,13 @@ const clientSchema = new mongoose.Schema(
       enum: AvailableUserRoles,
       default: UserRolesEnum.USER,
       required: true,
+    },
+    isAnonymous: {
+      type: Boolean,
+      default: false,
+    },
+    sessionId: {
+      type: String,
     },
     watchHistory: [{ type: Schema.Types.ObjectId, ref: "Product" }],
   },

@@ -1,6 +1,7 @@
 import { body } from "express-validator";
 import { mongoIdRequestBodyValidator } from "./mongodb.validators.js";
 const createProductValidator = () => {
+  console.log("The validatior is hitting");
   return [
     body("name").trim().notEmpty().withMessage("Name is required"),
     body("description")

@@ -1,0 +1,55 @@
+ const { productId } = req.params;
+  const { quantity = 1 } = req.body;
+
+  let cart;
+  // fetch user cart
+  cart = await Cart.findOne({ owner: req.user._id });
+  console.log("Cart count: ", cart);
+  if (!cart) {
+    cart = new Cart({ owner: req.user._id });
+  }
+
+  // See if product that user is adding exist in the db
+  const product = await Product.findById(productId);
+
+  if (!product) {
+    throw new ApiError(404, "Product does not exist");
+  }
+
+  // If product is there check if the quantity that user is adding is less than or equal to the product's stock
+  if (quantity > product.stock) {
+    // if quantity is greater throw an error
+    throw new ApiError(
+      400,
+      product.stock > 0
+        ? "Only " +
+          product.stock +
+          " products are remaining. But you are adding " +
+          quantity
+        : "Product is out of stock"
+    );
+  }
+
+  // See if the product that user is adding already exists in the cart
+  const existsProduct = cart.items?.find(
+    (item) => item.productId.toString() === productId
+  );
+
+  if (existsProduct) {
+    existsProduct.quantity = quantity;
+  } else {
+    cart.items.push({
+      productId,
+      quantity,
+    });
+  }
+
+  // Finally save the cart
+
+  await cart.save({ validateBeforeSave: true });
+
+  const newCart = await getCart(req.user._id);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Item added successfully", newCart));

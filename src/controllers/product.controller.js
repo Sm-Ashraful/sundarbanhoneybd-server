@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Category } from "../models/category.models.js";
 import { Product } from "../models/product.models.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -8,19 +9,29 @@ import { getMongoosePaginationOptions } from "../utils/helpers.js";
 import { customSlugify } from "../utils/helpers.js";
 
 const getAllProducts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 8 } = req.query;
+  let { page = 1, limit = 8 } = req.query;
+
+  // Check if limit is 'all' and set it to a very large number (or remove the limit)
+  if (limit === "all") {
+    limit = 0; // Set limit to 0 or a very large number to fetch all products
+  } else {
+    limit = parseInt(limit, 10); // Convert limit to integer
+  }
+
   const productAggregate = Product.aggregate([{ $match: {} }]);
+
+  const paginationOptions = getMongoosePaginationOptions({
+    page,
+    limit,
+    customLabels: {
+      totalDocs: "totalProducts",
+      docs: "products",
+    },
+  });
 
   const products = await Product.aggregatePaginate(
     productAggregate,
-    getMongoosePaginationOptions({
-      page,
-      limit,
-      customLabels: {
-        totalDocs: "totalProducts",
-        docs: "products",
-      },
-    })
+    paginationOptions
   );
 
   return res
@@ -28,8 +39,32 @@ const getAllProducts = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Products fetched successfully", products));
 });
 
+const getAllProductWithoutPagination = asyncHandler(async (req, res) => {
+  const products = await Product.find({});
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, "All Product fetched.", products));
+});
+
+const getSpecialProducts = asyncHandler(async (req, res) => {
+  try {
+    const specialProducts = await Product.find({ productType: "special" });
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, "Product found successfully", specialProducts)
+      );
+  } catch (error) {
+    console.error("Error: ", error);
+    throw new ApiError(400, "Not found");
+  }
+});
+
 //save product into database
 const createProduct = asyncHandler(async (req, res) => {
+  console.log("Req.body: ", req.body);
   const {
     name,
     description,
@@ -37,75 +72,76 @@ const createProduct = asyncHandler(async (req, res) => {
     price,
     stock,
     details,
-    productType,
     discountPercent,
+    priority,
   } = req.body;
 
-  const categoryToBeAdded = await Category.findById(category);
+  try {
+    const categoryToBeAdded = await Category.findById(category);
 
-  if (!categoryToBeAdded) {
-    throw new ApiError(404, "Category does not exist");
-  }
-
-  // Check if user has uploaded a main image\
-  const imagePath = req.files?.mainImage[0]?.path;
-  if (!imagePath) {
-    throw new ApiError(400, "Main image is required");
-  }
-
-  const mainImageRes = await uploadOnCloudinary(imagePath);
-  // Check if user has uploaded any subImages if yes then extract the file path
-  // else assign an empty array
-  /**
-   * @type {{ url: string; localPath: string; }[]}
-   */
-  const subImages = async () => {
-    if (req.files.subImages && req.files.subImages.length) {
-      const subImagesArray = [];
-
-      for (const image of req.files.subImages) {
-        const imageUrl = image.path;
-        const response = await uploadOnCloudinary(imageUrl);
-        subImagesArray.push({ url: response.url });
-      }
-
-      return subImagesArray;
-    } else {
-      return [];
+    if (!categoryToBeAdded) {
+      throw new ApiError(404, "Category does not exist");
     }
-  };
 
-  const subImagesResult = await subImages();
+    // Check if user has uploaded a main image\
+    const imagePath = req.files?.mainImage[0]?.path;
+    if (!imagePath) {
+      throw new ApiError(400, "Main image is required");
+    }
 
-  const owner = req.user._id;
+    const mainImageRes = await uploadOnCloudinary(imagePath);
+    const subImages = async () => {
+      if (req.files.subImages && req.files.subImages.length) {
+        const subImagesArray = [];
 
-  let sellingPrice = 0;
-  if (discountPercent) {
-    sellingPrice = price - (price * discountPercent) / 100;
-  } else {
-    sellingPrice = price;
+        for (const image of req.files.subImages) {
+          const imageUrl = image.path;
+          const response = await uploadOnCloudinary(imageUrl);
+          subImagesArray.push({ url: response.url });
+        }
+
+        return subImagesArray;
+      } else {
+        return [];
+      }
+    };
+
+    const subImagesResult = await subImages();
+
+    const owner = req.user._id;
+
+    let sellingPrice = 0;
+    if (discountPercent) {
+      sellingPrice = price - (price * discountPercent) / 100;
+    } else {
+      sellingPrice = price;
+    }
+
+    const product = await Product.create({
+      name,
+      slug: customSlugify(name),
+      description,
+      stock,
+      price,
+      sellingPrice,
+
+      discountPercent,
+      owner,
+      mainImage: {
+        url: mainImageRes.url,
+      },
+      subImages: subImagesResult,
+      category,
+      details,
+      priority: priority,
+    });
+    return res
+      .status(201)
+      .json(new ApiResponse(201, "Product created successfully", product));
+  } catch (error) {
+    console.log("Error: ", error);
+    throw new ApiError(404, "Not Found");
   }
-
-  const product = await Product.create({
-    name,
-    slug: customSlugify(name),
-    description,
-    stock,
-    price,
-    sellingPrice,
-    productType,
-    discountPercent,
-    owner,
-    mainImage: {
-      url: mainImageRes.url,
-    },
-    subImages: subImagesResult,
-    category,
-    details,
-  });
-  return res
-    .status(201)
-    .json(new ApiResponse(201, "Product created successfully", product));
 });
 
 // const updateProduct = asyncHandler(async (req, res) => {
@@ -212,47 +248,45 @@ const getProductById = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Product fetched successfully", product));
 });
 
-// const getProductsByCategory = asyncHandler(async (req, res) => {
-//   const { categoryId } = req.params;
-//   const { page = 1, limit = 10 } = req.query;
+const getProductsByCategory = asyncHandler(async (req, res) => {
+  const { categoryId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+  console.log("Params: ", categoryId, page, limit);
+  const category = await Category.findById(categoryId).select("name _id");
+  console.log("Category: ", category);
+  if (!category) {
+    throw new ApiError(404, "Category does not exist");
+  }
 
-//   const category = await Category.findById(categoryId).select("name _id");
+  const productAggregate = Product.aggregate([
+    {
+      $match: {
+        category: new mongoose.Types.ObjectId(categoryId),
+      },
+    },
+  ]);
+  console.log("productAggregate", productAggregate);
 
-//   if (!category) {
-//     throw new ApiError(404, "Category does not exist");
-//   }
+  const paginationOptions = getMongoosePaginationOptions({
+    page,
+    limit,
+    customLabels: {
+      totalDocs: "totalProducts",
+      docs: "products",
+    },
+  });
 
-//   const productAggregate = Product.aggregate([
-//     {
-//       // match the products with provided category
-//       $match: {
-//         category: new mongoose.Types.ObjectId(categoryId),
-//       },
-//     },
-//   ]);
-
-//   const products = await Product.aggregatePaginate(
-//     productAggregate,
-//     getMongoosePaginationOptions({
-//       page,
-//       limit,
-//       customLabels: {
-//         totalDocs: "totalProducts",
-//         docs: "products",
-//       },
-//     })
-//   );
-
-//   return res
-//     .status(200)
-//     .json(
-//       new ApiResponse(
-//         200,
-//         { ...products, category },
-//         "Category products fetched successfully"
-//       )
-//     );
-// });
+  const products = await Product.aggregatePaginate(
+    productAggregate,
+    paginationOptions
+  );
+  console.log("Products: ", products);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Category products fetched successfully", products)
+    );
+});
 
 // const removeProductSubImage = asyncHandler(async (req, res) => {
 //   const { productId, subImageId } = req.params;
@@ -327,7 +361,9 @@ export {
   createProduct,
   getAllProducts,
   getProductById,
-  //   getProductsByCategory,
+  getSpecialProducts,
+  getProductsByCategory,
+  getAllProductWithoutPagination,
   //   updateProduct,
   //   removeProductSubImage,
 };

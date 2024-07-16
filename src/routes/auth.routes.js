@@ -7,6 +7,7 @@ import {
   verifyOtp,
 } from "../controllers/auth.controller.js";
 import { authMiddleware, verifyJWT } from "../middlewares/auth.middleware.js";
+import { transferCartItems } from "../middlewares/loginCart.middleware.js";
 const router = Router();
 
 router.route("/otp-login").post(loginClient);

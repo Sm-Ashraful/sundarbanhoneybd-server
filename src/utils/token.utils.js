@@ -8,7 +8,9 @@ const defaultCookieOptions = {
 };
 
 const TokenExpiration = {
+
   Access: 5 * 24 * 60 * 60, // 5 minutes in seconds
+
   Refresh: 7 * 24 * 60 * 60, // 7 days in seconds
   RefreshIfLessThan: 4 * 24 * 60 * 60, // 4 days in seconds
 };

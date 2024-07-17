@@ -11,14 +11,22 @@ const app = express();
 
 console.log("ENv: ", process.env.CLIENT_URL);
 
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    methods: ["GET", "HEAD", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (
+      !origin ||
+      origin.endsWith(".sundarbanhoneybd.com") ||
+      origin === "https://sundarbanhoneybd.com"
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
 
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(express.static("public"));

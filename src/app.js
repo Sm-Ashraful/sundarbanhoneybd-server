@@ -9,7 +9,15 @@ import { DB_NAME } from "./constants.js";
 const app = express();
 //
 
-app.use(cors({ credentials: true, origin: process.env.CLIENT_URL }));
+console.log("ENv: ", process.env.CLIENT_URL);
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    methods: ["GET", "HEAD", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
+    credentials: true,
+  })
+);
 
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));

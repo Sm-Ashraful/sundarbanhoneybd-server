@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "This is sundarbanhoneybd separate backend",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node src/index.server.js",
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.server.js"

@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "This is sundarbanhoneybd separate backend",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "build": "babel src -d dist",
-    "start": "node dist/index.server.js",
+    "start": "node src/index.server.js",
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.server.js"
   },
   "keywords": [

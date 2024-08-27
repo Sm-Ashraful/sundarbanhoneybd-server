@@ -10,6 +10,16 @@ export const UserRolesEnum = {
 export const AvailableUserRoles = Object.values(UserRolesEnum);
 
 /**
+ * @type {{ FLAT:"FLAT"; } as const}
+ */
+export const CouponTypeEnum = {
+  FLAT: "FLAT",
+  // PERCENTAGE: "PERCENTAGE",
+};
+
+export const AvailableCouponTypes = Object.values(CouponTypeEnum);
+
+/**
  * @type {{ PENDING: "PENDING"; CANCELLED: "CANCELLED"; DELIVERED: "DELIVERED" } as const}
  */
 export const OrderStatusEnum = {
@@ -32,9 +42,9 @@ export const UserLoginType = {
 export const AvailableSocialLogins = Object.values(UserLoginType);
 
 export const PaymentProviderEnum = {
-  UNKNOWN: "UNKNOWN",
-  RAZORPAY: "RAZORPAY",
-  PAYPAL: "PAYPAL",
+  CASH: "CASH",
+  BKASH: "BKASH",
+  NAGOD: "NAGAD",
 };
 
 export const AvailablePaymentProviders = Object.values(PaymentProviderEnum);

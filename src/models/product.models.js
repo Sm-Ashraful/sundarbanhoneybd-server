@@ -93,6 +93,19 @@ const productSchema = new Schema(
   { timestamps: true }
 );
 
+// productSchema.virtual("reviews", {
+//   ref: "Review",
+//   localField: "_id",
+//   foreignField: "product",
+//   justOne: false,
+//   // match: {rating: 5} // Get the reviews whose rating is only 5.
+// });
+
+// productSchema.pre("remove", async function (next) {
+//   // Go to 'Reveiw; and delete all the review that are associated with this particular product
+//   await this.model("Review").deleteMany({ product: this._id });
+// });
+
 productSchema.plugin(mongooseAggregatePaginate);
 
 export const Product = mongoose.model("Product", productSchema);

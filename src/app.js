@@ -43,7 +43,7 @@ import addressRouter from "./routes/address.routes.js";
 import profileRouter from "./routes/profile.routes.js";
 import bannerRouter from "./routes/banner.routes.js";
 import checkoutRouter from "./routes/checkout.routes.js";
-import discountRouter from "./routes/discount.routes.js";
+import couponRouter from "./routes/coupon.routes.js";
 import shippingCityRouter from "./routes/shippingCost.route.js";
 import { logger } from "./middlewares/logger.js";
 import {
@@ -60,7 +60,7 @@ app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/carts", cartRouter);
 app.use("/api/v1/checkout", checkoutRouter);
-app.use("/app/v1/discount", discountRouter);
+app.use("/app/v1/coupon", couponRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/addresses", addressRouter);
 app.use("/api/v1/profile", profileRouter);

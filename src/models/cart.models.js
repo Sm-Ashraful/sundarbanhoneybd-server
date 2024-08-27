@@ -23,6 +23,11 @@ const cartSchema = new Schema(
       type: [itemSchema],
       default: [], // Set default value for items array directly here
     },
+    coupon: {
+      type: Schema.Types.ObjectId,
+      ref: "Coupon",
+      default: null,
+    },
   },
 
   { timestamps: true }

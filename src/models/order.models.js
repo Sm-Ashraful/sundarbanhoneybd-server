@@ -18,9 +18,15 @@ const orderSchema = new Schema(
       required: true,
     },
 
+    coupon: {
+      type: Schema.Types.ObjectId,
+      ref: "Coupon",
+      default: null,
+    },
+
     customer: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Client",
     },
     items: {
       type: [
@@ -51,7 +57,7 @@ const orderSchema = new Schema(
     paymentProvider: {
       type: String,
       enum: AvailablePaymentProviders,
-      default: PaymentProviderEnum.UNKNOWN,
+      default: PaymentProviderEnum.CASH,
     },
     paymentId: {
       type: String,

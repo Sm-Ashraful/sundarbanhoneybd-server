@@ -14,7 +14,7 @@ import { ensureUser } from "../middlewares/anonimous.middleware.js";
 
 const router = Router();
 
-// router.use(verifyJWT);
+router.use(verifyJWT);
 
 // router.route("/").get(getUserCart);
 

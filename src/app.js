@@ -16,8 +16,9 @@ const corsOptions = {
     if (
       !origin ||
       origin.endsWith(".sundarbanhoneybd.com") ||
-      origin === "https://sundarbanhoneybd.com"
+      origin === "http://localhost:3000"
     ) {
+      console.log("Origin: ", origin);
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));

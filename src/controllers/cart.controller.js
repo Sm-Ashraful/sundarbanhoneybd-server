@@ -1,51 +1,60 @@
 import { Cart } from "../models/cart.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { Product } from "../models/product.models.js";
 
 const addItemOrUpdateItemQuantity = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { quantity = 1 } = req.body;
   const user = req.user;
+  try {
+    if (!user) {
+      throw new ApiError(400, "User is unauthorize");
+    }
 
-  if (!user) {
-    throw new ApiError(400, "User is unauthorize");
-  }
+    let userCart = await Cart.findOne({ owner: user._id });
 
-  let userCart = await Cart.findOne({ owner: user._id });
-  if (!userCart) {
-    userCart = new Cart({ owner: user._id });
-  }
+    if (!userCart) {
+      userCart = new Cart({ owner: user._id });
+    }
 
-  const product = await Product.findById(productId); //shoud be optomize
-  if (!product) throw new ApiError(500, "Product does not exists");
-  if (quantity > product.stock) {
-    // if quantity is greater throw an error
-    throw new ApiError(
-      400,
-      product.stock > 0
-        ? "Only " +
-          product.stock +
-          " products are remaining. But you are adding " +
-          quantity
-        : "Product is out of stock"
-    );
-  }
-  const productThatAlreadyInCart = await userCart.items?.find((item) => {
-    return item.productId.toString() === productId;
-  });
-  if (productThatAlreadyInCart) {
-    productThatAlreadyInCart.quantity = quantity;
-  } else {
-    userCart.owner = user._id;
-    userCart.items.push({
-      productId,
-      quantity,
+    const product = await Product.findById(productId); //shoud be optomize
+    if (!product) throw new ApiError(500, "Product does not exists");
+    if (quantity > product.stock) {
+      // if quantity is greater throw an error
+      throw new ApiError(
+        400,
+        product.stock > 0
+          ? "Only " +
+            product.stock +
+            " products are remaining. But you are adding " +
+            quantity
+          : "Product is out of stock"
+      );
+    }
+    const productThatAlreadyInCart = await userCart.items?.find((item) => {
+      return item.productId.toString() === productId;
     });
+    if (productThatAlreadyInCart) {
+      productThatAlreadyInCart.quantity = quantity;
+    } else {
+      userCart.owner = user._id;
+      userCart.items.push({
+        productId,
+        quantity,
+      });
+    }
+    await userCart.save({ validateBeforeSave: true });
+    // const newCart = await getCart(req.user._id);
+    // console.log("New cart: ", newCart);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Item added successfully"));
+  } catch (error) {
+    console.log("Error: ", error);
+    throw new ApiError(499, "something went wrong");
   }
-  await userCart.save({ validateBeforeSave: true });
-  const newCart = await getCart(req.user._id);
-  return res.status(200).json(new ApiResponse(200, "Item added successfully"));
 });
 
 const removeItemFromCart = asyncHandler(async (req, res) => {

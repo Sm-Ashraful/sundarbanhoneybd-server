@@ -5,11 +5,20 @@ import mongoose from "mongoose";
  * @param {string} localPath
  * @description Removed the local file from the local file system based on the file path
  */
+
+// Function to extract public ID from Cloudinary URL
+export const getPublicIdFromUrl = (url) => {
+  const parts = url.split("/");
+  const idWithExtension = parts[parts.length - 1];
+  const publicId = idWithExtension.split(".")[0];
+  return publicId;
+};
+
 export const removeLocalFile = (localPath) => {
   fs.unlink(localPath, (err) => {
     if (err) console.log("Error while removing local files: ", err);
     else {
-      console.log("Removed local: ", localPath);
+      console.log("Removed local file:", localPath);
     }
   });
 };

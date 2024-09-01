@@ -16,9 +16,21 @@ import {
 import { customSlugify } from "../utils/helpers.js";
 
 //create product
-const createRegularProduct = asyncHandler(async (req, res) => {
-  const { name, description, category, price, stock, details, priority } =
-    req.body;
+const createProduct = asyncHandler(async (req, res) => {
+  const {
+    name,
+    description,
+    category,
+    price,
+    stock,
+    details,
+    priority,
+    discount,
+    offerTimePeriod,
+    offerBannerTitle,
+    offerTitle,
+    type,
+  } = req.body;
 
   try {
     const categoryToBeAdded = await Category.findById(category);
@@ -51,97 +63,16 @@ const createRegularProduct = asyncHandler(async (req, res) => {
     };
 
     const subImagesResult = await subImages();
-
-    const owner = req.user._id;
-
-    const product = await Product.create({
-      name,
-      slug: customSlugify(name),
-      description,
-      stock,
-      price,
-      owner,
-      weight: req.body?.weight,
-      element: req.body?.element,
-      mainImage: {
-        url: mainImageRes.url,
-      },
-      subImages: subImagesResult,
-      category,
-      details,
-      priority,
-      type: "REGULAR",
-    });
-    return res
-      .status(201)
-      .json(new ApiResponse(201, "Product created successfully", product));
-  } catch (error) {
-    console.log("Error: ", error);
-    throw new ApiError(404, "Not Found");
-  }
-});
-
-const createOfferProduct = asyncHandler(async (req, res) => {
-  const {
-    name,
-    description,
-    category,
-    price,
-    stock,
-    details,
-    priority,
-    offerTimePeriod,
-    offerTitle,
-    offerBannerTitle,
-    discount,
-    type,
-  } = req.body;
-
-  try {
-    const categoryToBeAdded = await Category.findById(category);
-
-    if (!categoryToBeAdded) {
-      throw new ApiError(404, "Category does not exist");
-    }
-
-    // Check if user has uploaded a main image
-    const imagePath = req.files?.mainImage[0]?.path;
-    if (!imagePath) {
-      throw new ApiError(400, "Main image is required");
-    }
-
-    const mainImageRes = await uploadOnCloudinary(imagePath);
-
-    const subImages = async () => {
-      if (req.files.subImages && req.files.subImages.length) {
-        const subImagesArray = [];
-
-        for (const image of req.files.subImages) {
-          const imageUrl = image.path;
-          const response = await uploadOnCloudinary(imageUrl);
-          subImagesArray.push({ url: response.url });
-        }
-
-        return subImagesArray;
-      } else {
-        return [];
+    // Handle offer banner image if it exists (for special and dealsOfTheDay types)
+    let bannerImage;
+    if (type === "special" || type === "dealsOfTheDay") {
+      const bannerImagePath = req.files?.bannerImage[0]?.path;
+      if (bannerImagePath) {
+        bannerImage = await uploadOnCloudinary(bannerImagePath);
       }
-    };
+    }
 
-    const subImagesResult = await subImages();
     const owner = req.user._id;
-
-    // Ensure the type is either SPECIAL or DEALSOFTHEDAY
-    if (type !== "OFFER" && type !== "SPECIAL" && type !== "DEALSOFTHEDAY") {
-      throw new ApiError(400, "Invalid product type for offerable product");
-    }
-
-    // Handle optional banner image
-    const bannerImagePath = req.files?.bannerImage?.[0]?.path;
-    let bannerImageRes;
-    if (bannerImagePath) {
-      bannerImageRes = await uploadOnCloudinary(bannerImagePath);
-    }
 
     const productData = {
       name,
@@ -159,24 +90,31 @@ const createOfferProduct = asyncHandler(async (req, res) => {
       category,
       details,
       priority,
-      type,
-      offerTimePeriod,
-      offerTitle,
-      offerBannerTitle,
-      discount,
+      type: type.toUpperCase(), // Store the type as uppercase (REGULAR, OFFER, SPECIAL, DEALSOFTHEDAY)
     };
 
-    if (bannerImageRes) {
-      productData.bannerImage = { url: bannerImageRes.url };
+    // Add discount percent if the product is an offer, special, or deals of the day
+    if (type === "offer" || type === "special" || type === "dealsOfTheDay") {
+      productData.discount = discount;
+    }
+
+    // Add additional fields for special and deals of the day products
+    if (type === "special" || type === "dealsOfTheDay") {
+      productData.offerTimePeriod = offerTimePeriod;
+      productData.offerBannerTitle = offerBannerTitle;
+      productData.offerTitle = offerTitle;
+
+      if (bannerImage) {
+        productData.bannerImage = {
+          url: bannerImage.url,
+        };
+      }
     }
 
     const product = await Product.create(productData);
-
     return res
       .status(201)
-      .json(
-        new ApiResponse(201, "Offerable product created successfully", product)
-      );
+      .json(new ApiResponse(201, "Product created successfully", product));
   } catch (error) {
     console.log("Error: ", error);
     throw new ApiError(404, "Not Found");
@@ -279,13 +217,30 @@ const getAllProductWithoutPagination = asyncHandler(async (req, res) => {
 
 const getSpecialProducts = asyncHandler(async (req, res) => {
   try {
-    const specialProducts = await Product.find({ type: "special" });
+    const specialProducts = await Product.find({ type: "SPECIAL" }).sort({
+      createdAt: -1,
+    });
 
     res
       .status(200)
       .json(
         new ApiResponse(200, "Product found successfully", specialProducts)
       );
+  } catch (error) {
+    console.error("Error: ", error);
+    throw new ApiError(400, "Not found");
+  }
+});
+
+const getDealsOfTheDayProducts = asyncHandler(async (req, res) => {
+  try {
+    const dealsOfTheDay = await Product.find({ type: "DEALSOFTHEDAY" }).sort({
+      createdAt: -1,
+    });
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, "Product found successfully", dealsOfTheDay));
   } catch (error) {
     console.error("Error: ", error);
     throw new ApiError(400, "Not found");
@@ -514,12 +469,12 @@ const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 export {
-  createRegularProduct,
-  createOfferProduct,
+  createProduct,
   updateProductToOffer,
   getAllProducts,
   getProductById,
   getSpecialProducts,
+  getDealsOfTheDayProducts,
   getProductsByCategory,
   getAllProductWithoutPagination,
   updateProduct,

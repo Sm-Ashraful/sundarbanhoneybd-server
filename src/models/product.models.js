@@ -40,7 +40,7 @@ const productSchema = new Schema(
 
     weight: {
       default: 0,
-      type: Number,
+      type: String,
     },
     element: {
       type: String,
@@ -68,7 +68,8 @@ const productSchema = new Schema(
     },
     shippingStatus: {
       type: String,
-      enum: ["FIXED", "NO", "EXP"],
+      enum: ["NO", "REGULAR", "FIXED"],
+      default: "REGULAR",
     },
 
     status: {

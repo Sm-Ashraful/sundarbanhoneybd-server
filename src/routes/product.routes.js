@@ -6,12 +6,12 @@ import {
   getProductById,
   getProductsByCategory,
   getSpecialProducts,
-  createOfferProduct,
-  createRegularProduct,
+  createProduct,
   deleteProduct,
   removeProductSubImage,
   updateProduct,
   updateProductToOffer,
+  getDealsOfTheDayProducts,
 } from "../controllers/product.controller.js";
 import { createProductValidator } from "../validators/product.validators.js";
 import { validate } from "../validators/validate.js";
@@ -23,6 +23,7 @@ const router = Router();
 router.route("/").get(getAllProducts);
 router.route("/all").get(getAllProductWithoutPagination);
 router.route("/special").get(getSpecialProducts);
+router.route("/dealsoftheday").get(getDealsOfTheDayProducts);
 router.route("/:categoryId").get(getProductsByCategory);
 router.route("/pid/:productId").get(
   mongoIdPathVariableValidator("productId"),
@@ -41,24 +42,10 @@ router.route("/create-product").post(
       name: "subImages",
       maxCount: 4, // maximum number of subImages is 4
     },
-  ]),
-
-  createProductValidator(),
-  validate,
-  verifyJWT,
-  verifyAdmin,
-  createRegularProduct
-);
-router.route("/create-offer").post(
-  upload.fields([
-    {
-      name: "mainImage",
-      maxCount: 1,
-    },
     {
       // frontend will send at max 4 `subImages` keys with file object which we will save in the backend
-      name: "subImages",
-      maxCount: 4, // maximum number of subImages is 4
+      name: "bannerImage",
+      maxCount: 1, // maximum number of subImages is 4
     },
   ]),
 
@@ -66,8 +53,9 @@ router.route("/create-offer").post(
   validate,
   verifyJWT,
   verifyAdmin,
-  createOfferProduct
+  createProduct
 );
+
 router
   .route("/make-offer/:productId")
   .post(

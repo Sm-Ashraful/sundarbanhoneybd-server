@@ -1,17 +1,15 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
-  getAllProducts,
+  getProducts,
   getAllProductWithoutPagination,
   getProductById,
   getProductsByCategory,
-  getSpecialProducts,
   createProduct,
   deleteProduct,
   removeProductSubImage,
   updateProduct,
   updateProductToOffer,
-  getDealsOfTheDayProducts,
 } from "../controllers/product.controller.js";
 import { createProductValidator } from "../validators/product.validators.js";
 import { validate } from "../validators/validate.js";
@@ -20,10 +18,10 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { mongoIdPathVariableValidator } from "../validators/mongodb.validators.js";
 
 const router = Router();
-router.route("/").get(getAllProducts);
-router.route("/all").get(getAllProductWithoutPagination);
-router.route("/special").get(getSpecialProducts);
-router.route("/dealsoftheday").get(getDealsOfTheDayProducts);
+router.route("/").get(getProducts);
+// router.route("/all").get(getAllProductWithoutPagination);
+// router.route("/special").get(getSpecialProducts);
+// router.route("/dealsoftheday").get(getDealsOfTheDayProducts);
 router.route("/:categoryId").get(getProductsByCategory);
 router.route("/pid/:productId").get(
   mongoIdPathVariableValidator("productId"),
@@ -76,20 +74,24 @@ router
     deleteProduct
   );
 
-router.route("/update/:productId").patch(
-  mongoIdPathVariableValidator("productId"), // Middleware to validate the product ID
-  validate, // Middleware to validate request data
-  verifyJWT, // Middleware to ensure the user is authenticated
-  verifyAdmin, // Middleware to ensure the user is an admin
-  updateProduct // Controller function to handle the update logic
-);
+router
+  .route("/update/:productId")
+  .patch(
+    mongoIdPathVariableValidator("productId"),
+    validate,
+    verifyJWT,
+    verifyAdmin,
+    updateProduct
+  );
 
-router.route("/remove-sub-image/:productId/:subImageId").delete(
-  mongoIdPathVariableValidator("productId"),
-  validate, // if you need any specific validation here
-  verifyJWT,
-  verifyAdmin,
-  removeProductSubImage
-);
+router
+  .route("/remove-sub-image/:productId/:subImageId")
+  .delete(
+    mongoIdPathVariableValidator("productId"),
+    validate,
+    verifyJWT,
+    verifyAdmin,
+    removeProductSubImage
+  );
 
 export default router;

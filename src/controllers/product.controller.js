@@ -177,34 +177,52 @@ const updateProductToOffer = asyncHandler(async (req, res) => {
   }
 });
 
-const getAllProducts = asyncHandler(async (req, res) => {
-  let { page = 1, limit = 8 } = req.query;
+const getProducts = asyncHandler(async (req, res) => {
+  try {
+    let { page = 1, limit = 8, type } = req.query;
 
-  if (limit === "all") {
-    limit = 0;
-  } else {
-    limit = parseInt(limit, 10);
+    if (limit === "all") {
+      limit = 0;
+    } else {
+      limit = parseInt(limit, 10);
+    }
+
+    const filter = {};
+
+    // Apply filtering based on the type
+    if (type === "all") {
+      const products = await Product.find({});
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, "Products fetched successfully", products));
+    } else {
+      filter.type = type.toUpperCase();
+      console.log("object:", filter);
+
+      const productAggregate = Product.aggregate([{ $match: filter }]);
+
+      const paginationOptions = getMongoosePaginationOptions({
+        page,
+        limit,
+        customLabels: {
+          totalDocs: "totalProducts",
+          docs: "products",
+        },
+      });
+
+      const products = await Product.aggregatePaginate(
+        productAggregate,
+        paginationOptions
+      );
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, "Products fetched successfully", products));
+    }
+  } catch (error) {
+    console.log("Product error: ", error);
   }
-
-  const productAggregate = Product.aggregate([{ $match: {} }]);
-
-  const paginationOptions = getMongoosePaginationOptions({
-    page,
-    limit,
-    customLabels: {
-      totalDocs: "totalProducts",
-      docs: "products",
-    },
-  });
-
-  const products = await Product.aggregatePaginate(
-    productAggregate,
-    paginationOptions
-  );
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Products fetched successfully", products));
 });
 
 const getAllProductWithoutPagination = asyncHandler(async (req, res) => {
@@ -374,7 +392,6 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
       },
     },
   ]);
-  console.log("productAggregate", productAggregate);
 
   const paginationOptions = getMongoosePaginationOptions({
     page,
@@ -471,10 +488,8 @@ const deleteProduct = asyncHandler(async (req, res) => {
 export {
   createProduct,
   updateProductToOffer,
-  getAllProducts,
+  getProducts,
   getProductById,
-  getSpecialProducts,
-  getDealsOfTheDayProducts,
   getProductsByCategory,
   getAllProductWithoutPagination,
   updateProduct,

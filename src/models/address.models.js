@@ -10,8 +10,11 @@ const addressSchema = new Schema(
     addressLine2: {
       type: String,
     },
-    district: {
+    policeStation: {
       required: true,
+      type: String,
+    },
+    city: {
       type: String,
     },
     owner: {
@@ -19,7 +22,6 @@ const addressSchema = new Schema(
       type: Schema.Types.ObjectId,
     },
     postcode: {
-      required: true,
       type: String,
     },
     state: {

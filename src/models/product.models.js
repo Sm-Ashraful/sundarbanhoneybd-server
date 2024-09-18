@@ -3,6 +3,13 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const productSchema = new Schema(
   {
+    name: {
+      required: true,
+      type: String,
+    },
+    slug: {
+      type: String,
+    },
     category: {
       ref: "Category",
       required: true,
@@ -18,39 +25,6 @@ const productSchema = new Schema(
         url: String,
       },
     },
-    bannerImage: {
-      type: {
-        url: String,
-      },
-    },
-
-    name: {
-      required: true,
-      type: String,
-    },
-    slug: {
-      type: String,
-    },
-    owner: {
-      ref: "User",
-      type: Schema.Types.ObjectId,
-    },
-    price: {
-      type: Number,
-      default: 0,
-    },
-    sellingPrice: {
-      type: Number,
-      default: 0,
-    },
-    weight: {
-      default: 0,
-      type: Number,
-    },
-    stock: {
-      default: 0,
-      type: Number,
-    },
     subImages: {
       type: [
         {
@@ -59,24 +33,31 @@ const productSchema = new Schema(
       ],
       default: [],
     },
-    productType: {
-      type: String,
-      enum: ["regular", "special", "offer"],
-    },
-    discountPercent: {
+    price: {
       type: Number,
       default: 0,
     },
-    productRating: {
+
+    weight: {
+      default: 0,
+      type: String,
+    },
+    element: {
+      type: String,
+    },
+    stock: {
+      default: 0,
+      type: Number || String,
+    },
+    owner: {
+      ref: "User",
+      type: Schema.Types.ObjectId,
+    },
+    rating: {
       type: Number,
       default: 0,
     },
-    offerTimePeriod: {
-      type: Number,
-    },
-    offerTitle: {
-      type: String,
-    },
+
     priority: {
       type: String,
       enum: ["high", "medium", "low"],
@@ -85,9 +66,40 @@ const productSchema = new Schema(
     details: {
       type: String,
     },
-    shipping: {
+    shippingStatus: {
       type: String,
-      enum: ["FIXED", "NO", "EXP"],
+      enum: ["NO", "REGULAR", "FIXED"],
+      default: "REGULAR",
+    },
+
+    status: {
+      type: String,
+      enum: ["pending", "complete", "remove"],
+      default: "pending",
+      required: true,
+    },
+    //for offer product
+    bannerImage: {
+      type: {
+        url: String,
+      },
+    },
+    offerTimePeriod: {
+      type: Number,
+    },
+    offerTitle: {
+      type: String,
+    },
+    offerBannerTitle: {
+      type: String,
+    },
+    discount: {
+      type: Number,
+    },
+    type: {
+      type: String,
+      enum: ["REGULAR", "OFFER", "SPECIAL", "DEALSOFTHEDAY"],
+      default: "REGULAR",
     },
   },
   { timestamps: true }

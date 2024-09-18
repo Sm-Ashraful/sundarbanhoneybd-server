@@ -80,12 +80,30 @@ const getAllCategories = asyncHandler(async (req, res) => {
 });
 
 const getProductByCategoryId = asyncHandler(async (req, res) => {
-  const categoryId = req.query.categoryId;
-  const products = await Product.find({ category: categoryId });
+  const { categoryId, inStock, outOfStock } = req.query;
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Products Successfully Fetched", products));
+  try {
+    if (!categoryId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, "Category ID is required"));
+    }
+    let query = { category: categoryId };
+    console.log("Heelo: ", query);
+
+    if (inStock === "true" && outOfStock === "false") {
+      query.stock = { $gt: 0 }; // Fetch only in-stock products
+    } else if (inStock === "false" && outOfStock === "true") {
+      query.stock = 0; // Fetch only out-of-stock products
+    }
+    const products = await Product.find(query);
+    console.log("Products: ", products);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Products Successfully Fetched", products));
+  } catch (error) {
+    console.log("Error: ", error);
+  }
 });
 
 // const getCategoryByName = asyncHandler(async (req, res) => {

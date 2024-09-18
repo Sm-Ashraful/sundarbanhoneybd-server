@@ -53,7 +53,7 @@ const bannerSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "complete"],
+      enum: ["pending", "complete", "remove"],
       default: "pending",
       required: true,
     },

@@ -90,7 +90,7 @@ const createProduct = asyncHandler(async (req, res) => {
       category,
       details,
       priority,
-      type: type.toUpperCase(), // Store the type as uppercase (REGULAR, OFFER, SPECIAL, DEALSOFTHEDAY)
+      type: type?.toUpperCase(), // Store the type as uppercase (REGULAR, OFFER, SPECIAL, DEALSOFTHEDAY)
     };
 
     // Add discount percent if the product is an offer, special, or deals of the day
@@ -197,7 +197,7 @@ const getProducts = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, "Products fetched successfully", products));
     } else {
-      filter.type = type.toUpperCase();
+      filter.type = type?.toUpperCase();
       console.log("object:", filter);
 
       const productAggregate = Product.aggregate([{ $match: filter }]);

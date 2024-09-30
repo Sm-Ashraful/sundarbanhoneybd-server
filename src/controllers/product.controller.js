@@ -179,7 +179,9 @@ const updateProductToOffer = asyncHandler(async (req, res) => {
 
 const getProducts = asyncHandler(async (req, res) => {
   try {
-    let { page = 1, limit = 8, type } = req.query;
+    let { page = 1, limit = 8, type = "regular" } = req.query;
+
+    console.log("req.query", req.query);
 
     if (limit === "all") {
       limit = 0;
@@ -199,7 +201,6 @@ const getProducts = asyncHandler(async (req, res) => {
     } else {
       filter.type = type.toUpperCase();
       console.log("object:", filter);
-
       const productAggregate = Product.aggregate([{ $match: filter }]);
 
       const paginationOptions = getMongoosePaginationOptions({
@@ -215,7 +216,7 @@ const getProducts = asyncHandler(async (req, res) => {
         productAggregate,
         paginationOptions
       );
-
+      console.log("object:", products);
       return res
         .status(200)
         .json(new ApiResponse(200, "Products fetched successfully", products));
@@ -233,37 +234,37 @@ const getAllProductWithoutPagination = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, "All Product fetched.", products));
 });
 
-const getSpecialProducts = asyncHandler(async (req, res) => {
-  try {
-    const specialProducts = await Product.find({ type: "SPECIAL" }).sort({
-      createdAt: -1,
-    });
+// const getSpecialProducts = asyncHandler(async (req, res) => {
+//   try {
+//     const specialProducts = await Product.find({ type: "SPECIAL" }).sort({
+//       createdAt: -1,
+//     });
 
-    res
-      .status(200)
-      .json(
-        new ApiResponse(200, "Product found successfully", specialProducts)
-      );
-  } catch (error) {
-    console.error("Error: ", error);
-    throw new ApiError(400, "Not found");
-  }
-});
+//     res
+//       .status(200)
+//       .json(
+//         new ApiResponse(200, "Product found successfully", specialProducts)
+//       );
+//   } catch (error) {
+//     console.error("Error: ", error);
+//     throw new ApiError(400, "Not found");
+//   }
+// });
 
-const getDealsOfTheDayProducts = asyncHandler(async (req, res) => {
-  try {
-    const dealsOfTheDay = await Product.find({ type: "DEALSOFTHEDAY" }).sort({
-      createdAt: -1,
-    });
+// const getDealsOfTheDayProducts = asyncHandler(async (req, res) => {
+//   try {
+//     const dealsOfTheDay = await Product.find({ type: "DEALSOFTHEDAY" }).sort({
+//       createdAt: -1,
+//     });
 
-    res
-      .status(200)
-      .json(new ApiResponse(200, "Product found successfully", dealsOfTheDay));
-  } catch (error) {
-    console.error("Error: ", error);
-    throw new ApiError(400, "Not found");
-  }
-});
+//     res
+//       .status(200)
+//       .json(new ApiResponse(200, "Product found successfully", dealsOfTheDay));
+//   } catch (error) {
+//     console.error("Error: ", error);
+//     throw new ApiError(400, "Not found");
+//   }
+// });
 
 const updateProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;

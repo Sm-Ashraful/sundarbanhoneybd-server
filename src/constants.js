@@ -1,10 +1,11 @@
 export const DB_NAME = "sundarbondhoneydb";
 /**
- * @type {{ ADMIN: "ADMIN"; USER: "USER"} as const}
+ * @type {{ ADMIN: "ADMIN"; USER: "USER"; "GEUSt":"GEUST"} as const}
  */
 export const UserRolesEnum = {
   ADMIN: "ADMIN",
   USER: "USER",
+  GUEST: "GUEST",
 };
 
 export const AvailableUserRoles = Object.values(UserRolesEnum);

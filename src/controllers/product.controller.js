@@ -122,13 +122,8 @@ const createProduct = asyncHandler(async (req, res) => {
 });
 
 const updateProductToOffer = asyncHandler(async (req, res) => {
-  const {
-    offerTimePeriod,
-    offerTitle,
-    offerBannerTitle,
-    discount,
-    type, // Should be "SPECIAL" or "DEALSOFTHEDAY"
-  } = req.body;
+  const { offerTimePeriod, offerTitle, offerBannerTitle, discount, type } =
+    req.body;
 
   try {
     const productId = req.params.id;

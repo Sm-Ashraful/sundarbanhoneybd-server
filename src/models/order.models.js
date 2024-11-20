@@ -13,17 +13,10 @@ const orderSchema = new Schema(
       type: Number,
       required: true,
     },
-    discountedOrderPrice: {
+    shippingPrice: {
       type: Number,
-      required: true,
+      default: 0,
     },
-
-    coupon: {
-      type: Schema.Types.ObjectId,
-      ref: "Coupon",
-      default: null,
-    },
-
     customer: {
       type: Schema.Types.ObjectId,
       ref: "Client",

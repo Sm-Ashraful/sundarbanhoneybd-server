@@ -3,11 +3,12 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const addressSchema = new Schema(
   {
-    addressLine1: {
+    customer: {
       required: true,
       type: String,
     },
-    addressLine2: {
+    address: {
+      required: true,
       type: String,
     },
     policeStation: {
@@ -20,13 +21,6 @@ const addressSchema = new Schema(
     owner: {
       ref: "User",
       type: Schema.Types.ObjectId,
-    },
-    postcode: {
-      type: String,
-    },
-    state: {
-      required: true,
-      type: String,
     },
   },
   { timestamps: true }

@@ -9,6 +9,193 @@ import { orderConfirmationMailgenContent } from "../utils/mail.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Client } from "../models/auth.models.js";
+import { Address } from "../models/address.models.js";
+
+const createOrder = asyncHandler(async (req, res) => {
+  const method = req.query.method;
+  const customerData = req.body;
+
+  if (method === "cash") {
+    const deliveryAddress = customerData.deliveryAddress;
+    const items = customerData.items;
+    const totalPrice = customerData.totalPrice;
+    const shippingPrice = customerData.shippingPrice;
+
+    try {
+      const orderItems = [];
+      const customer = await Client.findById(req.user?._id);
+
+      if (!customer) {
+        throw new ApiError(404, "Customer not found");
+      }
+
+      const savedAddress = await Address.create({
+        ...deliveryAddress, // Spread the address details from `customerData.deliveryAddress`
+        owner: req.user?._id, // Associate with the customer
+      });
+
+      for (const item of items) {
+        const product = await Product.findById(item.product._id);
+        if (!product) {
+          throw new ApiError(
+            404,
+            `Product with ID ${item.product._id} not found`
+          );
+        }
+        orderItems.push({
+          productId: product._id,
+          quantity: item.quantity,
+          price: product.price, // Assuming `price` is a field in the Product model
+        });
+      }
+      // Create and save order
+      const newOrder = new Order({
+        orderPrice: totalPrice,
+        shippingPrice,
+        customer: req.user?._id,
+        items: orderItems,
+        address: savedAddress._id,
+        status: "PENDING",
+        paymentProvider: "CASH",
+        isPaymentDone: false,
+      });
+
+      const savedOrder = await newOrder.save({ validateBeforeSave: false });
+
+      let bulkStockUpdates = items.map((item) => {
+        // Reduce the products stock
+        return {
+          updateOne: {
+            filter: { _id: item.product?._id },
+            update: { $inc: { stock: -item.quantity } }, // subtract the item quantity
+          },
+        };
+      });
+
+      const product = await Product.bulkWrite(bulkStockUpdates, {
+        skipValidation: true,
+      });
+
+      console.log("Save.", product);
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, "Order fetched successfully", savedOrder));
+    } catch (error) {
+      throw new ApiError(500, "Error creating order", error);
+    }
+  }
+});
+
+const getOrdersByCustomerId = asyncHandler(async (req, res) => {
+  try {
+    const customerId = req.user._id;
+    if (!customerId) {
+      throw new ApiError(404, "Customer not found!");
+    }
+    const { status } = req.query;
+    // Build the match condition
+    const matchCondition = {
+      customer: new mongoose.Types.ObjectId(customerId),
+    };
+    if (status) {
+      matchCondition.status = status.toUpperCase();
+    }
+
+    // Fetch orders with specific product details
+    const orders = await Order.aggregate([
+      { $match: matchCondition },
+      {
+        $lookup: {
+          from: "products", // The Product collection
+          localField: "items.productId",
+          foreignField: "_id",
+          as: "productDetails", // Temporary field for lookup
+          pipeline: [
+            {
+              $project: {
+                slug: 1,
+                name: 1,
+                price: 1,
+                mainImage: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "addresses", // Correct collection name
+          localField: "address",
+          foreignField: "_id",
+          as: "addressDetails", // Temporary field for address lookup
+          pipeline: [
+            {
+              $project: {
+                customer: 1,
+                address: 1,
+                city: 1,
+                policeStation: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          items: {
+            $map: {
+              input: "$items",
+              as: "item",
+              in: {
+                productId: "$$item.productId",
+                quantity: "$$item.quantity",
+                product: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$productDetails",
+                        as: "product",
+                        cond: { $eq: ["$$product._id", "$$item.productId"] },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+            },
+          },
+          address: { $arrayElemAt: ["$addressDetails", 0] }, // Extract the first address object
+        },
+      },
+      {
+        $project: {
+          "items.product._id": 0, // Exclude unnecessary fields
+          addressDetails: 0, // Exclude the temporary address lookup field
+          productDetails: 0, // Exclude the temporary product lookup field
+        },
+      },
+    ]);
+
+    console.log("Order items: ", orders);
+
+    if (orders.length === 0) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, "No orders available!", []));
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Orders fetched successfully!", orders));
+  } catch (error) {
+    console.log("Error for getting orders: ", error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, "Internal server error!", []));
+  }
+});
 
 /**
  *
@@ -527,4 +714,10 @@ const getOrderListAdmin = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Orders fetched successfully", orders));
 });
 
-export { getOrderById, getOrderListAdmin, updateOrderStatus };
+export {
+  createOrder,
+  getOrdersByCustomerId,
+  getOrderById,
+  getOrderListAdmin,
+  updateOrderStatus,
+};

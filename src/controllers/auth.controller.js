@@ -13,6 +13,7 @@ import {
   setTokens,
   verifyRefreshToken,
 } from "../utils/token.utils.js";
+import { UserRolesEnum } from "../constants.js";
 
 const loginClient = asyncHandler(async (req, res) => {
   //get data ->req.body
@@ -145,10 +146,38 @@ const getCurrentClient = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "User fetched successfully", user));
 });
 
+const guestLogin = asyncHandler(async (req, res) => {
+  function generateGuestId() {
+    return `guest_${Math.random().toString(36).substring(2, 10)}`;
+  }
+  try {
+    const guestClient = {
+      name: generateGuestId(),
+      phone: generateGuestId(),
+      role: UserRolesEnum.GEUSt,
+      isAnonymous: true,
+    };
+
+    const newClient = new Client(guestClient);
+    const { access_token, refresh_token } = buildTokens(newClient);
+    await newClient.save({ validateBeforeSave: false });
+    setTokens(res, access_token, refresh_token);
+    return res.status(200).json(
+      new ApiResponse(200, "Login Successfully", {
+        access_token: access_token,
+        user: newClient,
+      })
+    );
+  } catch (error) {
+    throw new ApiError(400, error);
+  }
+});
+
 export {
   loginClient,
   verifyOtp,
   logoutClient,
   refreshAccessToken,
   getCurrentClient,
+  guestLogin,
 };
